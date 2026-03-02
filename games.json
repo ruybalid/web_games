@@ -1,0 +1,20 @@
+[
+    {
+        "id": "snake",
+        "name": "Snake",
+        "path": "./snake\\snake.html",
+        "desc": "Play Snake"
+    },
+    {
+        "id": "test_game1",
+        "name": "Test Game1",
+        "path": "./test_game1\\test_game1.html",
+        "desc": "Play Test Game1"
+    },
+    {
+        "id": "test_game2",
+        "name": "Test Game2",
+        "path": "./test_game2\\test_game2.html",
+        "desc": "Play Test Game2"
+    }
+]
