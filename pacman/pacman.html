@@ -1,0 +1,536 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Neon Pacman</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-base: #050505;
+            --text-main: #f8fafc;
+            --primary: #3b82f6;
+            --pacman: #fbbf24;
+            --pellet: #ec4899;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Outfit', sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-base);
+            color: var(--text-main);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            overflow: hidden;
+            background-image: radial-gradient(circle at center, #111 0%, #000 100%);
+        }
+
+        .game-container {
+            position: relative;
+            margin-top: 20px;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 16px;
+            box-shadow: 0 0 40px rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(10px);
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            width: 100%;
+            margin-bottom: 20px;
+            padding: 0 10px;
+        }
+
+        h1 {
+            font-size: 2rem;
+            font-weight: 700;
+            background: linear-gradient(90deg, #fbbf24, #f59e0b);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        .score-board {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--text-main);
+            text-shadow: 0 0 10px rgba(255, 255, 255, 0.3);
+        }
+
+        canvas {
+            display: block;
+            border-radius: 8px;
+            box-shadow: 0 0 20px rgba(59, 130, 246, 0.2);
+            background: #000;
+        }
+
+        .game-over,
+        .win-screen {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.85);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            border-radius: 16px;
+            display: none;
+            backdrop-filter: blur(5px);
+            z-index: 10;
+        }
+
+        .game-over h2,
+        .win-screen h2 {
+            font-size: 3rem;
+            margin-bottom: 10px;
+            text-shadow: 0 0 20px currentColor;
+        }
+
+        .game-over h2 {
+            color: #ef4444;
+        }
+
+        .win-screen h2 {
+            color: #10b981;
+        }
+
+        .game-over p,
+        .win-screen p {
+            font-size: 1.2rem;
+            margin-bottom: 30px;
+            color: #94a3b8;
+        }
+
+        button {
+            padding: 12px 30px;
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: #050505;
+            background: #f8fafc;
+            border: none;
+            border-radius: 30px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        button:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 20px rgba(255, 255, 255, 0.4);
+        }
+
+        .controls {
+            margin-top: 20px;
+            color: #64748b;
+            font-size: 0.9rem;
+            text-align: center;
+        }
+
+        .controls kbd {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 3px 6px;
+            border-radius: 4px;
+            color: #cbd5e1;
+            margin: 0 3px;
+            font-family: inherit;
+        }
+
+        .back-link {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            color: #94a3b8;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            font-weight: 600;
+            transition: color 0.3s;
+        }
+
+        .back-link:hover {
+            color: #fff;
+        }
+    </style>
+</head>
+
+<body>
+    <a href="../index.html" class="back-link">← Back to Hub</a>
+    <div class="game-container">
+        <div class="header">
+            <h1>Neon Pacman</h1>
+            <div class="score-board">Score: <span id="score">0</span></div>
+        </div>
+
+        <canvas id="gameCanvas"></canvas>
+
+        <div class="game-over" id="gameOverScreen">
+            <h2>GAME OVER</h2>
+            <p>You were caught by a ghost!</p>
+            <button onclick="resetGame()">Play Again</button>
+        </div>
+
+        <div class="win-screen" id="winScreen">
+            <h2>YOU WIN!</h2>
+            <p>You cleared the maze!</p>
+            <button onclick="resetGame()">Play Again</button>
+        </div>
+    </div>
+
+    <div class="controls">
+        Use <kbd>↑</kbd> <kbd>↓</kbd> <kbd>←</kbd> <kbd>→</kbd> to control Pacman
+    </div>
+
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        const scoreEl = document.getElementById('score');
+        const gameOverScreen = document.getElementById('gameOverScreen');
+        const winScreen = document.getElementById('winScreen');
+
+        const tileSize = 30;
+
+        // 1 = Wall, 2 = Pellet, 0 = Empty, 9 = Ghost House Door
+        const initialMap = [
+            [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+            [1, 2, 2, 2, 2, 2, 2, 2, 2, 1, 2, 2, 2, 2, 2, 2, 2, 2, 1],
+            [1, 2, 1, 1, 2, 1, 1, 1, 2, 1, 2, 1, 1, 1, 2, 1, 1, 2, 1],
+            [1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 1],
+            [1, 2, 1, 1, 2, 1, 2, 1, 1, 1, 1, 1, 2, 1, 2, 1, 1, 2, 1],
+            [1, 2, 2, 2, 2, 1, 2, 2, 2, 1, 2, 2, 2, 1, 2, 2, 2, 2, 1],
+            [1, 1, 1, 1, 2, 1, 1, 1, 0, 1, 0, 1, 1, 1, 2, 1, 1, 1, 1],
+            [0, 0, 0, 1, 2, 1, 0, 0, 0, 0, 0, 0, 0, 1, 2, 1, 0, 0, 0],
+            [1, 1, 1, 1, 2, 1, 0, 1, 1, 9, 1, 1, 0, 1, 2, 1, 1, 1, 1],
+            [0, 0, 0, 0, 2, 0, 0, 1, 0, 0, 0, 1, 0, 0, 2, 0, 0, 0, 0],
+            [1, 1, 1, 1, 2, 1, 0, 1, 1, 1, 1, 1, 0, 1, 2, 1, 1, 1, 1],
+            [0, 0, 0, 1, 2, 1, 0, 0, 0, 0, 0, 0, 0, 1, 2, 1, 0, 0, 0],
+            [1, 1, 1, 1, 2, 1, 2, 1, 1, 1, 1, 1, 2, 1, 2, 1, 1, 1, 1],
+            [1, 2, 2, 2, 2, 2, 2, 2, 2, 1, 2, 2, 2, 2, 2, 2, 2, 2, 1],
+            [1, 2, 1, 1, 2, 1, 1, 1, 2, 1, 2, 1, 1, 1, 2, 1, 1, 2, 1],
+            [1, 2, 2, 1, 2, 2, 2, 2, 2, 0, 2, 2, 2, 2, 2, 1, 2, 2, 1],
+            [1, 1, 2, 1, 2, 1, 2, 1, 1, 1, 1, 1, 2, 1, 2, 1, 2, 1, 1],
+            [1, 2, 2, 2, 2, 1, 2, 2, 2, 1, 2, 2, 2, 1, 2, 2, 2, 2, 1],
+            [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
+        ];
+
+        let map = [];
+        let score = 0;
+        let gameOver = false;
+        let gameWon = false;
+        let animationFrameId;
+
+        const cols = initialMap[0].length;
+        const rows = initialMap.length;
+        canvas.width = cols * tileSize;
+        canvas.height = rows * tileSize;
+
+        let pacman = {};
+        let ghosts = [];
+
+        const ghostColors = ['#ef4444', '#ec4899', '#06b6d4', '#f97316'];
+
+        function initGhosts() {
+            ghosts = [
+                { x: 8 * tileSize + tileSize / 2, y: 9 * tileSize + tileSize / 2, vx: 0, vy: -2, speed: 2, color: ghostColors[0] },
+                { x: 9 * tileSize + tileSize / 2, y: 9 * tileSize + tileSize / 2, vx: 0, vy: -2, speed: 2, color: ghostColors[1] },
+                { x: 10 * tileSize + tileSize / 2, y: 9 * tileSize + tileSize / 2, vx: 0, vy: -2, speed: 2, color: ghostColors[2] },
+                { x: 9 * tileSize + tileSize / 2, y: 8 * tileSize + tileSize / 2, vx: 2, vy: 0, speed: 2, color: ghostColors[3] }
+            ];
+        }
+
+        function initGame() {
+            map = initialMap.map(row => [...row]);
+            score = 0;
+            scoreEl.innerText = score;
+            gameOver = false;
+            gameWon = false;
+            gameOverScreen.style.display = 'none';
+            winScreen.style.display = 'none';
+
+            pacman = {
+                x: 9 * tileSize + tileSize / 2,
+                y: 15 * tileSize + tileSize / 2,
+                w: tileSize * 0.7,
+                vx: 0, vy: 0,
+                speed: 2.5,
+                angle: 0,
+                mouthOpen: 0,
+                mouthDir: 1,
+                nextVx: 0, nextVy: 0
+            };
+
+            initGhosts();
+
+            if (animationFrameId) cancelAnimationFrame(animationFrameId);
+            gameLoop();
+        }
+
+        document.addEventListener('keydown', (e) => {
+            if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key)) {
+                e.preventDefault();
+            }
+            const speed = pacman.speed;
+            if (e.key === 'ArrowLeft') { pacman.nextVx = -speed; pacman.nextVy = 0; }
+            if (e.key === 'ArrowRight') { pacman.nextVx = speed; pacman.nextVy = 0; }
+            if (e.key === 'ArrowUp') { pacman.nextVx = 0; pacman.nextVy = -speed; }
+            if (e.key === 'ArrowDown') { pacman.nextVx = 0; pacman.nextVy = speed; }
+        });
+
+        function drawMap() {
+            ctx.shadowBlur = 10;
+
+            for (let r = 0; r < rows; r++) {
+                for (let c = 0; c < cols; c++) {
+                    let tile = map[r][c];
+                    let x = c * tileSize;
+                    let y = r * tileSize;
+
+                    if (tile === 1 || tile === 9) {
+                        ctx.fillStyle = 'rgba(59, 130, 246, 0.1)';
+                        ctx.strokeStyle = tile === 9 ? 'rgba(255, 255, 255, 0.5)' : '#3b82f6';
+                        ctx.shadowColor = tile === 9 ? 'white' : '#3b82f6';
+                        ctx.lineWidth = 2;
+                        ctx.fillRect(x, y, tileSize, tileSize);
+                        ctx.strokeRect(x + 2, y + 2, tileSize - 4, tileSize - 4);
+                    } else if (tile === 2) {
+                        ctx.fillStyle = '#ec4899';
+                        ctx.shadowColor = '#ec4899';
+                        ctx.beginPath();
+                        ctx.arc(x + tileSize / 2, y + tileSize / 2, 4, 0, Math.PI * 2);
+                        ctx.fill();
+                    }
+                }
+            }
+            ctx.shadowBlur = 0;
+        }
+
+        function checkCollision(x, y, isGhost = false) {
+            if (x < 0 || x > cols * tileSize) return false;
+
+            const radius = 10;
+            const left = Math.floor((x - radius) / tileSize);
+            const right = Math.floor((x + radius) / tileSize);
+            const top = Math.floor((y - radius) / tileSize);
+            const bottom = Math.floor((y + radius) / tileSize);
+
+            for (let r = top; r <= bottom; r++) {
+                for (let c = left; c <= right; c++) {
+                    let mapC = c < 0 ? cols - 1 : (c >= cols ? 0 : c);
+                    if (r >= 0 && r < rows) {
+                        let tile = map[r][mapC];
+                        if (tile === 1 || (tile === 9 && !isGhost)) {
+                            return true;
+                        }
+                    }
+                }
+            }
+            return false;
+        }
+
+        function updatePacman() {
+            const threshold = 6;
+            let gridCenterC = Math.floor(pacman.x / tileSize) * tileSize + tileSize / 2;
+            let gridCenterR = Math.floor(pacman.y / tileSize) * tileSize + tileSize / 2;
+
+            if ((pacman.nextVx !== 0 && Math.abs(pacman.y - gridCenterR) <= threshold) ||
+                (pacman.nextVy !== 0 && Math.abs(pacman.x - gridCenterC) <= threshold)) {
+
+                if (!checkCollision(pacman.x + pacman.nextVx, pacman.y + pacman.nextVy)) {
+                    if (pacman.nextVx !== 0) pacman.y = gridCenterR;
+                    if (pacman.nextVy !== 0) pacman.x = gridCenterC;
+
+                    pacman.vx = pacman.nextVx;
+                    pacman.vy = pacman.nextVy;
+                    if (pacman.vx > 0) pacman.angle = 0;
+                    if (pacman.vx < 0) pacman.angle = Math.PI;
+                    if (pacman.vy > 0) pacman.angle = Math.PI / 2;
+                    if (pacman.vy < 0) pacman.angle = -Math.PI / 2;
+                }
+            }
+
+            if (!checkCollision(pacman.x + pacman.vx, pacman.y + pacman.vy)) {
+                pacman.x += pacman.vx;
+                pacman.y += pacman.vy;
+            }
+
+            if (pacman.x < -tileSize / 2) pacman.x = canvas.width + tileSize / 2;
+            if (pacman.x > canvas.width + tileSize / 2) pacman.x = -tileSize / 2;
+
+            let c = Math.floor(pacman.x / tileSize);
+            let r = Math.floor(pacman.y / tileSize);
+
+            if (r >= 0 && r < rows && c >= 0 && c < cols) {
+                if (map[r][c] === 2) {
+                    map[r][c] = 0;
+                    score += 10;
+                    scoreEl.innerText = score;
+                    checkWin();
+                }
+            }
+
+            pacman.mouthOpen += 0.15 * pacman.mouthDir * (Math.abs(pacman.vx) + Math.abs(pacman.vy) > 0 ? 1 : 0);
+            if (pacman.mouthOpen >= 0.6) pacman.mouthDir = -1;
+            if (pacman.mouthOpen <= 0) pacman.mouthDir = 1;
+        }
+
+        function updateGhosts() {
+            ghosts.forEach(ghost => {
+                let options = [];
+                let speeds = [[-ghost.speed, 0], [ghost.speed, 0], [0, -ghost.speed], [0, ghost.speed]];
+
+                let atIntersection = false;
+                let gridCenterX = Math.floor(ghost.x / tileSize) * tileSize + tileSize / 2;
+                let gridCenterY = Math.floor(ghost.y / tileSize) * tileSize + tileSize / 2;
+
+                if (Math.abs(ghost.x - gridCenterX) <= ghost.speed && Math.abs(ghost.y - gridCenterY) <= ghost.speed) {
+                    atIntersection = true;
+                }
+
+                if (atIntersection) {
+                    ghost.x = gridCenterX;
+                    ghost.y = gridCenterY;
+
+                    speeds.forEach(sp => {
+                        let isReversing = (sp[0] !== 0 && sp[0] === -ghost.vx) || (sp[1] !== 0 && sp[1] === -ghost.vy);
+                        if (!isReversing && !checkCollision(ghost.x + sp[0], ghost.y + sp[1], true)) {
+                            options.push(sp);
+                        }
+                    });
+
+                    if (options.length > 0) {
+                        let choice = options[Math.floor(Math.random() * options.length)];
+                        ghost.vx = choice[0];
+                        ghost.vy = choice[1];
+                    } else {
+                        ghost.vx *= -1;
+                        ghost.vy *= -1;
+                    }
+                }
+
+                if (!checkCollision(ghost.x + ghost.vx, ghost.y + ghost.vy, true)) {
+                    ghost.x += ghost.vx;
+                    ghost.y += ghost.vy;
+                } else if (!atIntersection) {
+                    ghost.vx *= -1;
+                    ghost.vy *= -1;
+                }
+
+                if (ghost.x < -tileSize / 2) ghost.x = canvas.width + tileSize / 2;
+                if (ghost.x > canvas.width + tileSize / 2) ghost.x = -tileSize / 2;
+
+                let dist = Math.hypot(pacman.x - ghost.x, pacman.y - ghost.y);
+                if (dist < tileSize * 0.8) {
+                    gameOver = true;
+                }
+            });
+        }
+
+        function checkWin() {
+            for (let r = 0; r < rows; r++) {
+                for (let c = 0; c < cols; c++) {
+                    if (map[r][c] === 2) return;
+                }
+            }
+            gameWon = true;
+        }
+
+        function drawPacman() {
+            ctx.save();
+            ctx.translate(pacman.x, pacman.y);
+            ctx.rotate(pacman.angle);
+
+            ctx.beginPath();
+            ctx.shadowBlur = 15;
+            ctx.shadowColor = '#fbbf24';
+            ctx.fillStyle = '#fbbf24';
+            ctx.arc(0, 0, pacman.w / 2, pacman.mouthOpen, Math.PI * 2 - pacman.mouthOpen);
+            ctx.lineTo(0, 0);
+            ctx.fill();
+            ctx.restore();
+        }
+
+        function drawGhosts() {
+            ghosts.forEach(ghost => {
+                ctx.save();
+                ctx.translate(ghost.x, ghost.y);
+
+                ctx.shadowBlur = 15;
+                ctx.shadowColor = ghost.color;
+                ctx.fillStyle = ghost.color;
+
+                let w = tileSize * 0.7;
+                let r = w / 2;
+
+                ctx.beginPath();
+                ctx.arc(0, -r / 4, r, Math.PI, 2 * Math.PI);
+                ctx.lineTo(r, r);
+
+                ctx.lineTo(r / 2, r / 2);
+                ctx.lineTo(0, r);
+                ctx.lineTo(-r / 2, r / 2);
+                ctx.lineTo(-r, r);
+                ctx.closePath();
+                ctx.fill();
+
+                ctx.shadowBlur = 0;
+                ctx.fillStyle = 'white';
+                ctx.beginPath();
+                ctx.arc(-r / 2.5, -r / 3, r / 3, 0, Math.PI * 2);
+                ctx.arc(r / 2.5, -r / 3, r / 3, 0, Math.PI * 2);
+                ctx.fill();
+
+                ctx.fillStyle = 'blue';
+                ctx.beginPath();
+                ctx.arc(-r / 2.5 + Math.sign(ghost.vx), -r / 3 + Math.sign(ghost.vy), r / 6, 0, Math.PI * 2);
+                ctx.arc(r / 2.5 + Math.sign(ghost.vx), -r / 3 + Math.sign(ghost.vy), r / 6, 0, Math.PI * 2);
+                ctx.fill();
+
+                ctx.restore();
+            });
+        }
+
+        function gameLoop() {
+            if (gameOver) {
+                gameOverScreen.style.display = 'flex';
+                return;
+            }
+            if (gameWon) {
+                winScreen.style.display = 'flex';
+                return;
+            }
+
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            updatePacman();
+            updateGhosts();
+
+            drawMap();
+            drawPacman();
+            drawGhosts();
+
+            animationFrameId = requestAnimationFrame(gameLoop);
+        }
+
+        window.resetGame = initGame;
+        initGame();
+    </script>
+</body>
+
+</html>
