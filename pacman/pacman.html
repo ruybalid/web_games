@@ -399,7 +399,7 @@
                 let gridCenterX = Math.floor(ghost.x / tileSize) * tileSize + tileSize / 2;
                 let gridCenterY = Math.floor(ghost.y / tileSize) * tileSize + tileSize / 2;
 
-                if (Math.abs(ghost.x - gridCenterX) <= ghost.speed && Math.abs(ghost.y - gridCenterY) <= ghost.speed) {
+                if (Math.abs(ghost.x - gridCenterX) < ghost.speed && Math.abs(ghost.y - gridCenterY) < ghost.speed) {
                     atIntersection = true;
                 }
 
