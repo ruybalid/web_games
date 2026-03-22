@@ -1,5 +1,11 @@
 [
     {
+        "id": "NinjaScroll",
+        "name": "Ninjascroll",
+        "path": "./NinjaScroll\\NinjaScroll.html",
+        "desc": "Play Ninjascroll"
+    },
+    {
         "id": "pacman",
         "name": "Pacman",
         "path": "./pacman\\pacman.html",

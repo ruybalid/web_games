@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NinjaScroll Visual Upgrade</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="game-container">
+        <!-- Parallax layers handled in Canvas -->
+        <div id="ui-layer">
+            <div id="score-display">Score: <span id="score">0</span></div>
+            <div id="instructions">Jump: <strong>Space/Up</strong> | Shoot: <strong>X</strong></div>
+        </div>
+        
+        <div id="countdown-screen" class="overlay hidden">
+            <h1 id="countdown-text">3</h1>
+            <p>Get Ready!</p>
+        </div>
+
+        <canvas id="gameCanvas" width="800" height="400"></canvas>
+        
+        <div id="game-over" class="overlay hidden">
+            <h1 style="color: #ff4757;">Game Over</h1>
+            <p>Final Score: <span id="final-score">0</span></p>
+            <button id="restart-btn">Try Again</button>
+        </div>
+    </div>
+    <script src="script.js"></script>
+</body>
+</html>
