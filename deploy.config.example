@@ -1,0 +1,13 @@
+# Copy this file to deploy.config (which git ignores) and fill it in.
+
+# Your Bluehost SSH login: <cPanel username>@<your domain or server hostname>
+SSH_TARGET="cpaneluser@ruybalid.com"
+SSH_PORT=22
+
+# Folder on the server that holds the site (the web_games git clone).
+# Find it on the server with:  pwd   (while in the folder you normally `git pull` in)
+SITE_DIR="public_html/web-games"
+
+# Optional overrides
+# BOT_SHIP_REPO="https://github.com/DonkeyCow74/bot-ship-game.git"
+# BOT_SHIP_LOCAL="../bot-ship-game"

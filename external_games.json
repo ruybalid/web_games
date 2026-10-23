@@ -1,0 +1,8 @@
+[
+    {
+        "id": "bot-ship-game",
+        "name": "Ship AI Arena",
+        "path": "./bot-ship-game/index.html",
+        "desc": "Program a spaceship AI and battle your friends' bots."
+    }
+]

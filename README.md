@@ -36,3 +36,18 @@ Then open http://localhost:8000 in your browser.
 6. Open http://localhost:8000 in your browser.
 
 
+
+
+## Deploying to web-games.ruybalid.com
+
+The site on Bluehost is a git clone of this repo. bot-ship-game is its own repo (DonkeyCow74/bot-ship-game), cloned into a `bot-ship-game/` folder inside the site. `external_games.json` lists it so it shows up in `games.json`.
+
+One-time setup:
+1. In Bluehost, turn on SSH access and add your public key (cPanel → Security → SSH Access → Manage SSH Keys, then authorize it).
+2. `cp deploy.config.example deploy.config` and fill in your SSH login and the site folder.
+
+To deploy: push your changes to GitHub (in web_games and/or bot-ship-game), then run in Git Bash:
+
+```bash
+./deploy.sh
+```

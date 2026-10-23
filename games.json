@@ -1,20 +1,26 @@
 [
     {
+        "id": "bot-ship-game",
+        "name": "Ship AI Arena",
+        "path": "./bot-ship-game/index.html",
+        "desc": "Program a spaceship AI and battle your friends' bots."
+    },
+    {
         "id": "NinjaScroll",
         "name": "Ninjascroll",
-        "path": "./NinjaScroll\\NinjaScroll.html",
+        "path": "./NinjaScroll/NinjaScroll.html",
         "desc": "Play Ninjascroll"
     },
     {
         "id": "pacman",
         "name": "Pacman",
-        "path": "./pacman\\pacman.html",
+        "path": "./pacman/pacman.html",
         "desc": "Play Pacman"
     },
     {
         "id": "snake",
         "name": "Snake",
-        "path": "./snake\\snake.html",
+        "path": "./snake/snake.html",
         "desc": "Play Snake"
     }
 ]

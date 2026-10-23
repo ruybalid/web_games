@@ -1,0 +1,2 @@
+# Don't serve git internals (the site folder is a git clone).
+RedirectMatch 404 /\.git
